@@ -1385,25 +1385,27 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
                                             foreach ($shapes as $idx => $shape) {
                                                 $shape->registerXPathNamespace('v', 'urn:schemas-microsoft-com:vml');
                                                 $imageData = $shape->xpath('//v:imagedata');
-                                                $imageData = $imageData[$idx];
+                                                if (!empty($imageData)) {
+                                                    $imageData = $imageData[$idx];
 
-                                                $imageData = $imageData->attributes('urn:schemas-microsoft-com:office:office');
-                                                $style = self::toCSSArray((string)$shape['style']);
+                                                    $imageData = $imageData->attributes('urn:schemas-microsoft-com:office:office');
+                                                    $style = self::toCSSArray((string)$shape['style']);
 
-                                                $hfImages[ (string)$shape['id'] ] = new PHPExcel_Worksheet_HeaderFooterDrawing();
-                                                if (isset($imageData['title'])) {
-                                                    $hfImages[ (string)$shape['id'] ]->setName((string)$imageData['title']);
+                                                    $hfImages[ (string)$shape['id'] ] = new PHPExcel_Worksheet_HeaderFooterDrawing();
+                                                    if (isset($imageData['title'])) {
+                                                        $hfImages[ (string)$shape['id'] ]->setName((string)$imageData['title']);
+                                                    }
+
+                                                    $hfImages[ (string)$shape['id'] ]->setPath("zip://".PHPExcel_Shared_File::realpath($pFilename)."#" . $drawings[(string)$imageData['relid']], false);
+                                                    $hfImages[ (string)$shape['id'] ]->setResizeProportional(false);
+                                                    $hfImages[ (string)$shape['id'] ]->setWidth($style['width']);
+                                                    $hfImages[ (string)$shape['id'] ]->setHeight($style['height']);
+                                                    if (isset($style['margin-left'])) {
+                                                        $hfImages[ (string)$shape['id'] ]->setOffsetX($style['margin-left']);
+                                                    }
+                                                    $hfImages[ (string)$shape['id'] ]->setOffsetY($style['margin-top']);
+                                                    $hfImages[ (string)$shape['id'] ]->setResizeProportional(true);
                                                 }
-
-                                                $hfImages[ (string)$shape['id'] ]->setPath("zip://".PHPExcel_Shared_File::realpath($pFilename)."#" . $drawings[(string)$imageData['relid']], false);
-                                                $hfImages[ (string)$shape['id'] ]->setResizeProportional(false);
-                                                $hfImages[ (string)$shape['id'] ]->setWidth($style['width']);
-                                                $hfImages[ (string)$shape['id'] ]->setHeight($style['height']);
-                                                if (isset($style['margin-left'])) {
-                                                    $hfImages[ (string)$shape['id'] ]->setOffsetX($style['margin-left']);
-                                                }
-                                                $hfImages[ (string)$shape['id'] ]->setOffsetY($style['margin-top']);
-                                                $hfImages[ (string)$shape['id'] ]->setResizeProportional(true);
                                             }
 
                                             $docSheet->getHeaderFooter()->setImages($hfImages);
